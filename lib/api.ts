@@ -179,7 +179,7 @@ export async function getPriorityQueue(): Promise<PriorityQueueRow[]> {
     const actual = Number(row.actual_days) || 0;
     const probability = Math.min(actual / promised, 1.0);
 
-    const order = row.orders as { customer_id: number; customers: { full_name: string } | null } | null;
+    const order = row.orders as unknown as { customer_id: number; customers: { full_name: string } | null } | null;
     const customerName = order?.customers?.full_name ?? "Unknown";
     const customerId = order?.customer_id ?? 0;
 
