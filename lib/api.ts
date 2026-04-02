@@ -166,6 +166,51 @@ export async function createOrder(
 }
 
 export async function getPriorityQueue(): Promise<PriorityQueueRow[]> {
+  const { data: predictionRows, error: predictionsError } = await supabase
+    .from("order_predictions")
+    .select(
+      "order_id, customer_id, customer_name, late_delivery_probability, scored_at"
+    )
+    .order("scored_at", { ascending: false })
+    .limit(50);
+
+  if (!predictionsError && predictionRows && predictionRows.length > 0) {
+    return predictionRows.map((row) => ({
+      orderId: String(row.order_id),
+      customerId: String(row.customer_id),
+      customerName: (row.customer_name as string) ?? "Unknown",
+      lateDeliveryProbability:
+        Number(row.late_delivery_probability) >= 0
+          ? Math.min(Math.max(Number(row.late_delivery_probability), 0), 1)
+          : 0,
+      scoredAt: (row.scored_at as string) ?? new Date().toISOString(),
+    }));
+  }
+
+  const { data: fraudPredictionRows, error: fraudPredictionsError } =
+    await supabase
+      .from("order_predictions")
+      .select("order_id, customer_id, customer_name, fraud_probability, scored_at")
+      .order("scored_at", { ascending: false })
+      .limit(50);
+
+  if (
+    !fraudPredictionsError &&
+    fraudPredictionRows &&
+    fraudPredictionRows.length > 0
+  ) {
+    return fraudPredictionRows.map((row) => ({
+      orderId: String(row.order_id),
+      customerId: String(row.customer_id),
+      customerName: (row.customer_name as string) ?? "Unknown",
+      lateDeliveryProbability:
+        Number(row.fraud_probability) >= 0
+          ? Math.min(Math.max(Number(row.fraud_probability), 0), 1)
+          : 0,
+      scoredAt: (row.scored_at as string) ?? new Date().toISOString(),
+    }));
+  }
+
   const { data, error } = await supabase
     .from("shipments")
     .select("order_id, actual_days, promised_days, ship_datetime, orders(customer_id, customers(full_name))")
@@ -206,5 +251,23 @@ export async function getPriorityQueue(): Promise<PriorityQueueRow[]> {
 }
 
 export async function runScoring(): Promise<{ ok: boolean; message: string }> {
-  return { ok: true, message: "Scoring completed (placeholder — no ML endpoint wired yet)." };
+  const response = await fetch("/api/scoring/run", {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+  });
+
+  if (!response.ok) {
+    return { ok: false, message: "Run Scoring failed." };
+  }
+
+  const payload = (await response.json()) as {
+    ok?: boolean;
+    message?: string;
+  };
+
+  if (!payload.ok) {
+    return { ok: false, message: payload.message ?? "Run Scoring failed." };
+  }
+
+  return { ok: true, message: payload.message ?? "Scoring completed." };
 }

@@ -116,6 +116,9 @@ Add these in `Project Settings` -> `Environment Variables`:
 
 - `NEXT_PUBLIC_SUPABASE_URL`
 - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+- Optional for external ML service trigger:
+  - `ML_SCORING_ENDPOINT_URL`
+  - `ML_SCORING_ENDPOINT_BEARER_TOKEN`
 
 Use the same values as local `.env.local` (or your updated production values).
 
@@ -124,6 +127,19 @@ Use the same values as local `.env.local` (or your updated production values).
 Trigger the first deployment from the dashboard (or by pushing to `main`).
 
 If you change environment variables later, redeploy so the new values are applied.
+
+## Run Scoring Endpoint Wiring
+
+The `Run Scoring` button now calls `POST /api/scoring/run`.
+
+Behavior:
+
+- If `ML_SCORING_ENDPOINT_URL` is set, the app triggers that external scoring endpoint.
+- If not set, the app runs a built-in fallback scoring job and writes rows to `order_predictions`.
+
+Priority Queue now reads from `order_predictions` first, then falls back to shipment-derived scoring if no predictions exist.
+
+If your Supabase project was created before this update, run the `order_predictions` DDL block in `supabase/01_schema.sql` to ensure required columns/indexes exist.
 
 ## Learn More
 
