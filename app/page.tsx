@@ -4,12 +4,6 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { getCustomers } from "@/lib/api";
 import type { Customer } from "@/lib/types";
-import { supabase } from "@/lib/supabase";
-
-type Todo = {
-  id: string | number;
-  name: string;
-};
 
 export default function SelectCustomerPage() {
   const router = useRouter();
@@ -17,28 +11,14 @@ export default function SelectCustomerPage() {
   const [selectedId, setSelectedId] = useState("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const [todos, setTodos] = useState<Todo[]>([]);
-  const [todosError, setTodosError] = useState("");
 
   useEffect(() => {
     const load = async () => {
       try {
         setLoading(true);
         setError("");
-        setTodosError("");
         const list = await getCustomers();
         setCustomers(list);
-
-        const { data, error: supabaseError } = await supabase
-          .from("todos")
-          .select("id, name")
-          .limit(10);
-
-        if (supabaseError) {
-          setTodosError("Could not load todos from Supabase.");
-        } else if (data) {
-          setTodos(data as Todo[]);
-        }
       } catch {
         setError("Could not load customers.");
       } finally {
@@ -102,32 +82,6 @@ export default function SelectCustomerPage() {
           >
             Open Dashboard
           </button>
-        </div>
-      )}
-
-      {!loading && (
-        <div className="mt-6 border-t pt-4">
-          <h3 className="text-sm font-semibold text-slate-900">Supabase Todos</h3>
-
-          {todosError && (
-            <p className="mt-2 rounded-md bg-red-50 p-3 text-sm text-red-700">
-              {todosError}
-            </p>
-          )}
-
-          {!todosError && todos.length === 0 && (
-            <p className="mt-2 text-sm text-slate-600">
-              No todos found in Supabase.
-            </p>
-          )}
-
-          {!todosError && todos.length > 0 && (
-            <ul className="mt-2 list-disc space-y-1 pl-5 text-sm text-slate-700">
-              {todos.map((todo) => (
-                <li key={todo.id}>{todo.name}</li>
-              ))}
-            </ul>
-          )}
         </div>
       )}
     </section>

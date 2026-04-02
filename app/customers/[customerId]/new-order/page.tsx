@@ -2,9 +2,8 @@
 
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
-import { createOrder, getCustomers } from "@/lib/api";
-import { mockProducts } from "@/lib/mock-data";
-import type { Customer } from "@/lib/types";
+import { createOrder, getCustomers, getProducts } from "@/lib/api";
+import type { Customer, Product } from "@/lib/types";
 
 type NewOrderPageProps = {
   params: Promise<{ customerId: string }>;
@@ -18,6 +17,7 @@ type DraftItem = {
 export default function NewOrderPage({ params }: NewOrderPageProps) {
   const [customerId, setCustomerId] = useState("");
   const [customer, setCustomer] = useState<Customer | null>(null);
+  const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
@@ -37,8 +37,12 @@ export default function NewOrderPage({ params }: NewOrderPageProps) {
         const resolved = await params;
         const id = resolved.customerId;
         setCustomerId(id);
-        const customers = await getCustomers();
+        const [customers, productList] = await Promise.all([
+          getCustomers(),
+          getProducts(),
+        ]);
         setCustomer(customers.find((item) => item.id === id) ?? null);
+        setProducts(productList);
       } catch {
         setError("Could not load customer information.");
       } finally {
@@ -51,11 +55,11 @@ export default function NewOrderPage({ params }: NewOrderPageProps) {
 
   const runningTotal = useMemo(() => {
     return items.reduce((sum, item) => {
-      const product = mockProducts.find((p) => p.id === item.productId);
+      const product = products.find((p) => p.id === item.productId);
       if (!product) return sum;
       return sum + product.price * item.quantity;
     }, 0);
-  }, [items]);
+  }, [items, products]);
 
   const addItem = () => {
     setSubmitError("");
@@ -115,7 +119,7 @@ export default function NewOrderPage({ params }: NewOrderPageProps) {
       const payload = {
         customerId,
         items: items.map((item) => {
-          const product = mockProducts.find((p) => p.id === item.productId);
+          const product = products.find((p) => p.id === item.productId);
           return {
             productId: item.productId,
             productName: product?.name ?? "Unknown Product",
@@ -206,7 +210,7 @@ export default function NewOrderPage({ params }: NewOrderPageProps) {
               onChange={(e) => setSelectedProductId(e.target.value)}
             >
               <option value="">Select a product...</option>
-              {mockProducts.map((product) => (
+              {products.map((product) => (
                 <option key={product.id} value={product.id}>
                   {product.name} (${product.price.toFixed(2)})
                 </option>
@@ -255,7 +259,7 @@ export default function NewOrderPage({ params }: NewOrderPageProps) {
                 </thead>
                 <tbody>
                   {items.map((item) => {
-                    const product = mockProducts.find(
+                    const product = products.find(
                       (p) => p.id === item.productId
                     );
                     const lineTotal = (product?.price ?? 0) * item.quantity;
