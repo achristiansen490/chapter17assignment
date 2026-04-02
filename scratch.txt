@@ -1,0 +1,62 @@
+  customer_id      INTEGER PRIMARY KEY AUTOINCREMENT,
+  full_name        TEXT NOT NULL,
+  email            TEXT NOT NULL UNIQUE,
+  gender           TEXT NOT NULL,       -- "Male", "Female", "Non-binary"
+  birthdate        TEXT NOT NULL,       -- YYYY-MM-DD format
+  created_at       TEXT NOT NULL,
+  city             TEXT,
+  state            TEXT,
+  zip_code         TEXT,
+  customer_segment TEXT,          -- e.g., "budget", "standard", "premium"
+  loyalty_tier     TEXT,          -- e.g., "none", "silver", "gold"
+  is_active        INTEGER NOT NULL DEFAULT 1
+  order_item_id  INTEGER PRIMARY KEY AUTOINCREMENT,
+  order_id       INTEGER NOT NULL,
+  product_id     INTEGER NOT NULL,
+  quantity       INTEGER NOT NULL,
+  unit_price     REAL NOT NULL,
+  line_total     REAL NOT NULL,
+  order_id           INTEGER PRIMARY KEY AUTOINCREMENT,
+  customer_id        INTEGER NOT NULL,
+  order_datetime     TEXT NOT NULL,
+  billing_zip        TEXT,
+  shipping_zip       TEXT,
+  shipping_state     TEXT,
+  payment_method     TEXT NOT NULL,   -- "card", "paypal", "bank", "crypto"
+  device_type        TEXT NOT NULL,   -- "mobile", "desktop", "tablet"
+  ip_country         TEXT NOT NULL,   -- "US", "CA", "NG", etc.
+  promo_used         INTEGER NOT NULL DEFAULT 0,
+  promo_code         TEXT,
+  order_subtotal     REAL NOT NULL,
+  shipping_fee       REAL NOT NULL,
+  tax_amount         REAL NOT NULL,
+  order_total        REAL NOT NULL,
+  risk_score         REAL NOT NULL,   -- 0-100
+  is_fraud           INTEGER NOT NULL DEFAULT 0,
+  review_id      INTEGER PRIMARY KEY AUTOINCREMENT,
+  customer_id    INTEGER NOT NULL,
+  product_id     INTEGER NOT NULL,
+  rating         INTEGER NOT NULL CHECK (rating BETWEEN 1 AND 5),
+  review_datetime TEXT NOT NULL,
+  review_text    TEXT,
+  product_id   INTEGER PRIMARY KEY AUTOINCREMENT,
+  sku          TEXT NOT NULL UNIQUE,
+  product_name TEXT NOT NULL,
+  category     TEXT NOT NULL,
+  price        REAL NOT NULL,
+  cost         REAL NOT NULL,
+  is_active    INTEGER NOT NULL DEFAULT 1
+  shipment_id        INTEGER PRIMARY KEY AUTOINCREMENT,
+  order_id           INTEGER NOT NULL UNIQUE,
+  ship_datetime      TEXT NOT NULL,
+  carrier            TEXT NOT NULL,   -- "UPS", "FedEx", "USPS"
+  shipping_method    TEXT NOT NULL,   -- "standard", "expedited", "overnight"
+  distance_band      TEXT NOT NULL,   -- "local", "regional", "national"
+  promised_days      INTEGER NOT NULL,
+  actual_days        INTEGER NOT NULL,
+  late_delivery      INTEGER NOT NULL DEFAULT 0,
+
+
+
+  create pipeline in cursor
+  

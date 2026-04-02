@@ -42,3 +42,5 @@ supabase/import/*.csv
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+scratch.txt
