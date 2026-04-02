@@ -4,6 +4,12 @@ export type Customer = {
   email?: string;
 };
 
+export type Product = {
+  id: string;
+  name: string;
+  price: number;
+};
+
 export type DashboardSummary = {
   customerId: string;
   totalOrders: number;
