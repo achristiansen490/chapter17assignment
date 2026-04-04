@@ -15,50 +15,49 @@
       "average_precision": "PR-AUC (area under precision-recall curve)",
       "roc_auc": "ROC-AUC"
     },
-    "cv_winner_key": "grad_boost",
+    "cv_winner_key": "log_reg",
     "cross_validation_results": [
       {
-        "model": "grad_boost",
-        "pr_auc_mean": 0.16935263322561836,
-        "pr_auc_std": 0.022095524832699796,
-        "roc_auc_mean": 0.7753774482273458,
-        "roc_auc_std": 0.017058406522383975
-      },
-      {
         "model": "log_reg",
-        "pr_auc_mean": 0.1541995980154002,
-        "pr_auc_std": 0.018618965060719132,
-        "roc_auc_mean": 0.7267505212961578,
-        "roc_auc_std": 0.02047434383585944
+        "pr_auc_mean": 0.15182129582091117,
+        "pr_auc_std": 0.021724463839457444,
+        "roc_auc_mean": 0.7334739866877341,
+        "roc_auc_std": 0.022660370611017704
       },
       {
-        "model": "hist_gboost",
-        "pr_auc_mean": 0.13752718157435057,
-        "pr_auc_std": 0.01110503150043534,
-        "roc_auc_mean": 0.7308049495690785,
-        "roc_auc_std": 0.00611574554748312
+        "model": "grad_boost",
+        "pr_auc_mean": 0.1490705046473086,
+        "pr_auc_std": 0.03237699546135932,
+        "roc_auc_mean": 0.7431624287435407,
+        "roc_auc_std": 0.027233351940978683
       },
       {
         "model": "random_forest",
-        "pr_auc_mean": 0.1346760651973873,
-        "pr_auc_std": 0.009456489834961892,
-        "roc_auc_mean": 0.7217030298446901,
-        "roc_auc_std": 0.014407946500399912
+        "pr_auc_mean": 0.13515028140247734,
+        "pr_auc_std": 0.01105389822555167,
+        "roc_auc_mean": 0.7126756950342289,
+        "roc_auc_std": 0.023223822556203973
+      },
+      {
+        "model": "hist_gboost",
+        "pr_auc_mean": 0.12329361409701288,
+        "pr_auc_std": 0.005247154813926742,
+        "roc_auc_mean": 0.6991384287491762,
+        "roc_auc_std": 0.01704582641413053
       },
       {
         "model": "xgboost",
-        "pr_auc_mean": 0.12313358332765516,
-        "pr_auc_std": 0.009252743825972224,
-        "roc_auc_mean": 0.6920824729883742,
-        "roc_auc_std": 0.026357226651822482
+        "pr_auc_mean": 0.11404641484986595,
+        "pr_auc_std": 0.00626008897831911,
+        "roc_auc_mean": 0.6724109234237926,
+        "roc_auc_std": 0.017357901427747367
       }
     ],
     "tuned_best_params": {
-      "model__n_estimators": 200,
-      "model__max_depth": 2,
-      "model__learning_rate": 0.05
+      "model__solver": "saga",
+      "model__C": 0.001
     },
-    "tuned_best_cv_score": 0.1743854932234091
+    "tuned_best_cv_score": 0.16370713350768626
   },
   "input_contract_for_scoring_api": {
     "raw_feature_columns_in_X": [
@@ -74,7 +73,6 @@
       "shipping_fee",
       "tax_amount",
       "order_total",
-      "risk_score",
       "cust_full_name",
       "cust_email",
       "cust_gender",
@@ -86,7 +84,6 @@
       "cust_customer_segment",
       "cust_loyalty_tier",
       "cust_is_active",
-      "ship_ship_datetime",
       "ship_carrier",
       "ship_shipping_method",
       "ship_distance_band",
@@ -151,7 +148,6 @@
       "shipping_fee",
       "tax_amount",
       "order_total",
-      "risk_score",
       "cust_is_active",
       "ship_promised_days",
       "n_lines",
@@ -221,7 +217,6 @@
       "cust_zip",
       "cust_customer_segment",
       "cust_loyalty_tier",
-      "ship_ship_datetime",
       "ship_carrier",
       "ship_shipping_method",
       "ship_distance_band",
