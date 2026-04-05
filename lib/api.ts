@@ -256,14 +256,14 @@ export async function runScoring(): Promise<{ ok: boolean; message: string }> {
     headers: { "content-type": "application/json" },
   });
 
-  if (!response.ok) {
-    return { ok: false, message: "Run Scoring failed." };
-  }
-
-  const payload = (await response.json()) as {
+  const payload = (await response.json().catch(() => ({}))) as {
     ok?: boolean;
     message?: string;
   };
+
+  if (!response.ok) {
+    return { ok: false, message: payload.message ?? "Run Scoring failed." };
+  }
 
   if (!payload.ok) {
     return { ok: false, message: payload.message ?? "Run Scoring failed." };

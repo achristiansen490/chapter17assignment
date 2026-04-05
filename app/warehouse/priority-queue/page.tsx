@@ -55,7 +55,7 @@ export default function PriorityQueuePage() {
 
       const result = await runScoring();
       if (!result.ok) {
-        setError("Run Scoring failed.");
+        setError(result.message || "Run Scoring failed.");
         return;
       }
 
@@ -182,4 +182,3 @@ export default function PriorityQueuePage() {
     </section>
   );
 }
-
