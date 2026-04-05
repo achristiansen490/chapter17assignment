@@ -187,6 +187,30 @@ export async function getPriorityQueue(): Promise<PriorityQueueRow[]> {
     }));
   }
 
+  const { data: predictionRowsNoCustomerId, error: predictionsNoCustomerIdError } =
+    await supabase
+      .from("order_predictions")
+      .select("order_id, customer_name, late_delivery_probability, scored_at")
+      .order("scored_at", { ascending: false })
+      .limit(50);
+
+  if (
+    !predictionsNoCustomerIdError &&
+    predictionRowsNoCustomerId &&
+    predictionRowsNoCustomerId.length > 0
+  ) {
+    return predictionRowsNoCustomerId.map((row) => ({
+      orderId: String(row.order_id),
+      customerId: "0",
+      customerName: (row.customer_name as string) ?? "Unknown",
+      lateDeliveryProbability:
+        Number(row.late_delivery_probability) >= 0
+          ? Math.min(Math.max(Number(row.late_delivery_probability), 0), 1)
+          : 0,
+      scoredAt: (row.scored_at as string) ?? new Date().toISOString(),
+    }));
+  }
+
   const { data: fraudPredictionRows, error: fraudPredictionsError } =
     await supabase
       .from("order_predictions")
@@ -202,6 +226,32 @@ export async function getPriorityQueue(): Promise<PriorityQueueRow[]> {
     return fraudPredictionRows.map((row) => ({
       orderId: String(row.order_id),
       customerId: String(row.customer_id),
+      customerName: (row.customer_name as string) ?? "Unknown",
+      lateDeliveryProbability:
+        Number(row.fraud_probability) >= 0
+          ? Math.min(Math.max(Number(row.fraud_probability), 0), 1)
+          : 0,
+      scoredAt: (row.scored_at as string) ?? new Date().toISOString(),
+    }));
+  }
+
+  const {
+    data: fraudPredictionRowsNoCustomerId,
+    error: fraudPredictionsNoCustomerIdError,
+  } = await supabase
+    .from("order_predictions")
+    .select("order_id, customer_name, fraud_probability, scored_at")
+    .order("scored_at", { ascending: false })
+    .limit(50);
+
+  if (
+    !fraudPredictionsNoCustomerIdError &&
+    fraudPredictionRowsNoCustomerId &&
+    fraudPredictionRowsNoCustomerId.length > 0
+  ) {
+    return fraudPredictionRowsNoCustomerId.map((row) => ({
+      orderId: String(row.order_id),
+      customerId: "0",
       customerName: (row.customer_name as string) ?? "Unknown",
       lateDeliveryProbability:
         Number(row.fraud_probability) >= 0

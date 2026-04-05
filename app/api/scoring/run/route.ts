@@ -50,6 +50,21 @@ type MinimalOrderPredictionInsert = {
   scored_at: string;
 };
 
+type LegacyPredictionInsert = {
+  order_id: number;
+  customer_name: string;
+  late_delivery_probability: number;
+  scored_at: string;
+};
+
+type FraudPredictionInsert = {
+  order_id: number;
+  customer_id?: number;
+  customer_name?: string;
+  fraud_probability: number;
+  scored_at: string;
+};
+
 type ProductRow = {
   sku?: string | null;
   category?: string | null;
@@ -487,9 +502,13 @@ async function writePredictions(
 
   if (inserts.length === 0) return;
 
-  const { error: insertError } = await supabase.from("order_predictions").insert(inserts);
-  if (!insertError) return;
+  // Modern schema: includes customer_id + predicted_late_delivery + model metadata.
+  const { error: fullInsertError } = await supabase
+    .from("order_predictions")
+    .insert(inserts);
+  if (!fullInsertError) return;
 
+  // Transitional schema: keep core queue fields, still includes customer_id.
   const minimalInserts: MinimalOrderPredictionInsert[] = inserts.map((row) => ({
     order_id: row.order_id,
     customer_id: row.customer_id,
@@ -497,16 +516,50 @@ async function writePredictions(
     late_delivery_probability: row.late_delivery_probability,
     scored_at: row.scored_at,
   }));
-
   const { error: minimalInsertError } = await supabase
     .from("order_predictions")
     .insert(minimalInserts);
+  if (!minimalInsertError) return;
 
-  if (minimalInsertError) {
-    throw new Error(
-      `Could not write scored predictions: ${minimalInsertError.message}. Ensure order_predictions exists and service role key is configured.`
-    );
-  }
+  // Legacy schema without customer_id.
+  const legacyInserts: LegacyPredictionInsert[] = inserts.map((row) => ({
+    order_id: row.order_id,
+    customer_name: row.customer_name,
+    late_delivery_probability: row.late_delivery_probability,
+    scored_at: row.scored_at,
+  }));
+  const { error: legacyInsertError } = await supabase
+    .from("order_predictions")
+    .insert(legacyInserts);
+  if (!legacyInsertError) return;
+
+  // Fraud-oriented schema variant used by some earlier notebook integrations.
+  const fraudInsertsWithCustomerId: FraudPredictionInsert[] = inserts.map((row) => ({
+    order_id: row.order_id,
+    customer_id: row.customer_id,
+    customer_name: row.customer_name,
+    fraud_probability: row.late_delivery_probability,
+    scored_at: row.scored_at,
+  }));
+  const { error: fraudWithCustomerIdError } = await supabase
+    .from("order_predictions")
+    .insert(fraudInsertsWithCustomerId);
+  if (!fraudWithCustomerIdError) return;
+
+  const fraudInsertsLegacy: FraudPredictionInsert[] = inserts.map((row) => ({
+    order_id: row.order_id,
+    customer_name: row.customer_name,
+    fraud_probability: row.late_delivery_probability,
+    scored_at: row.scored_at,
+  }));
+  const { error: fraudLegacyError } = await supabase
+    .from("order_predictions")
+    .insert(fraudInsertsLegacy);
+  if (!fraudLegacyError) return;
+
+  throw new Error(
+    `Could not write scored predictions: ${fraudLegacyError.message}. order_predictions schema does not match expected columns (run supabase/01_schema.sql).`
+  );
 }
 
 async function runFallbackScoringJob() {
