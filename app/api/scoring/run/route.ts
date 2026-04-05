@@ -31,6 +31,11 @@ type ShipmentRow = {
     | null;
 };
 
+type CustomerLookupRow = {
+  customer_id: number | string;
+  full_name: string | null;
+};
+
 type OrderPredictionInsert = {
   order_id: number;
   customer_id: number;
@@ -588,12 +593,35 @@ async function runFallbackScoringJob() {
 
   const rows = (data ?? []) as ShipmentRow[];
   const scoredAt = new Date().toISOString();
+  const customerIds = Array.from(
+    new Set(
+      rows
+        .map((row) => {
+          const rawOrder = Array.isArray(row.orders) ? row.orders[0] : row.orders;
+          return Number(rawOrder?.customer_id ?? 0);
+        })
+        .filter((id) => Number.isFinite(id) && id > 0)
+    )
+  );
+
+  const customerNameById = new Map<number, string>();
+  if (customerIds.length > 0) {
+    const { data: customerRows } = await supabase
+      .from("customers")
+      .select("customer_id, full_name")
+      .in("customer_id", customerIds);
+
+    for (const customerRow of (customerRows ?? []) as CustomerLookupRow[]) {
+      const id = Number(customerRow.customer_id);
+      if (Number.isFinite(id) && id > 0 && customerRow.full_name) {
+        customerNameById.set(id, customerRow.full_name);
+      }
+    }
+  }
 
   const inserts: OrderPredictionInsert[] = rows.map((row) => {
     const rawOrder = Array.isArray(row.orders) ? row.orders[0] : row.orders;
-    const rawCustomer = rawOrder?.customers;
-    const customer =
-      rawCustomer && Array.isArray(rawCustomer) ? rawCustomer[0] : rawCustomer;
+    const customerId = Number(rawOrder?.customer_id ?? 0);
 
     const promisedDays = Number(row.promised_days) || 1;
     const actualDays = Number(row.actual_days) || 0;
@@ -606,8 +634,8 @@ async function runFallbackScoringJob() {
 
     return {
       order_id: Number(row.order_id),
-      customer_id: Number(rawOrder?.customer_id ?? 0),
-      customer_name: customer?.full_name ?? "Unknown",
+      customer_id: customerId,
+      customer_name: customerNameById.get(customerId) ?? "Unknown",
       late_delivery_probability: probability,
       predicted_late_delivery: probability >= 0.5,
       scored_at: row.ship_datetime ?? scoredAt,
