@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { createClient } from "@supabase/supabase-js";
+import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import { spawn } from "node:child_process";
 import path from "node:path";
 
@@ -471,7 +471,7 @@ async function buildNotebookFeatureRows() {
 }
 
 async function writePredictions(
-  supabase: ReturnType<typeof createClient>,
+  supabase: SupabaseClient,
   inserts: OrderPredictionInsert[]
 ) {
   const { error: deleteError } = await supabase
